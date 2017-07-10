@@ -49,6 +49,7 @@ public class Heugo extends AbstractNegotiationParty {
 		
 		if (action instanceof Offer){
 			lastPartnerBid = ((Offer) action).getBid();
+			System.out.println("Adding to Opponent HashMap: " + lastPartnerBid);
 			opponent.addToOpponentBids(lastPartnerBid);
 		}
 	}
@@ -64,6 +65,7 @@ public class Heugo extends AbstractNegotiationParty {
 	 */
 	@Override
 	public Action chooseAction(List<Class<? extends Action>> validActions) {
+		System.out.println("\n\n---------\n\n");
 		double lastPartnerBidUtility;
 		double time = timeline.getTime();
 		
@@ -74,16 +76,16 @@ public class Heugo extends AbstractNegotiationParty {
 				return new Offer(getPartyId(), firstBid);
 			}
 			
-			else{ // TODO All other proposals
+			else{ //All other proposals
 				lastPartnerBidUtility = getUtility(lastPartnerBid);
 				
 				if(isAcceptable(lastPartnerBidUtility, time))
 					return new Accept(getPartyId(), lastPartnerBid);
 				
 				do{
-					
 					opponent.addToOpponentBids(lastPartnerBid);
 					Bid newBid = generateBid(time);
+					System.out.println("\tMaking Offer: " + newBid);
 					return new Offer(getPartyId(), newBid);
 				}
 				while (!isAcceptable(lastPartnerBidUtility, time));
@@ -106,19 +108,20 @@ public class Heugo extends AbstractNegotiationParty {
 	private Bid generateBid(double time) throws Exception{
 		double opponentMean = opponent.getMean();
 		double opponentSD = opponent.getStandardDeviation();
+		
+		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD);
+		
 		double threshold = getThreshold(time);
 		
 		Bid newBid = utilitySpace.getMaxUtilityBid();
 		double newBidUtility = getUtility(newBid);
 		
-		if((threshold >= (opponentMean - opponentSD)) && (threshold <= (opponentMean + opponentSD))){
-			while(((newBidUtility <= (opponentMean - opponentSD)) || (newBidUtility >= (opponentMean + opponentSD)))
-					&& (!heugoPastActions.containsValue(newBid))){
+		while((((newBidUtility <= (opponentMean - opponentSD)) || (newBidUtility >= (opponentMean + opponentSD)))) 
+			&& (newBidUtility >= threshold)){
 				newBid = generateRandomBid();
 				newBidUtility = getUtility(newBid);
-			}
 		}
-		
+		System.out.println("New Bid Utility: " + getUtility(newBid));
 		updateHashMap(newBid);
 		return newBid;
 	}

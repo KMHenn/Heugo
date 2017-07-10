@@ -29,8 +29,8 @@ public class OpponentModel{
 		this.info = info;
 		opponentBids = new HashMap<>();
 		opponentUtilities = new HashMap<>();
-		mean = 0;
-		standardDeviation = 0;
+		mean = 0.0;
+		standardDeviation = 0.0;
 	}
 	
 	/**
@@ -42,6 +42,8 @@ public class OpponentModel{
 		numBids ++;
 		String bidString = bid.toString();
 		opponentBids.put(bidString, bid);
+		System.out.println("Adding to Opponent Bids: " + bid);
+		addToOpponentUtilities(bid, bidString);
 		updateMean();
 		updateStandardDeviation();
 	}
@@ -55,6 +57,7 @@ public class OpponentModel{
 	protected void addToOpponentUtilities(Bid bid, String bidString){
 		double util = info.getUtilitySpace().getUtility(bid);
 		opponentUtilities.put(bidString, util);
+		System.out.println("Adding to Opponent Utilities: " + util);
 	}
 	
 	/**
@@ -67,6 +70,7 @@ public class OpponentModel{
 			sum += utility;
 		
 		mean = sum / numBids;
+		System.out.println("\tNew Mean: " + mean);
 	}
 	
 	/**
@@ -80,7 +84,8 @@ public class OpponentModel{
 			squaredDifference += Math.pow((utility - mean), 2);
 		
 		sd = squaredDifference / (numBids - 1);
-		sd = Math.sqrt(sd);
+		standardDeviation = Math.sqrt(sd);
+		System.out.println("\tNew SD: " + standardDeviation);
 	}
 	
 	/**
