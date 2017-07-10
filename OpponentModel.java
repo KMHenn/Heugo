@@ -12,8 +12,8 @@ import negotiator.parties.NegotiationInfo;
  *
  */
 public class OpponentModel{
-	protected HashMap<Integer, Bid> opponentBids;
-	protected HashMap<Integer, Double> opponentUtilities;
+	protected HashMap<String, Bid> opponentBids;
+	protected HashMap<String, Double> opponentUtilities;
 	protected int numBids;
 	protected double mean;
 	protected double standardDeviation;
@@ -41,9 +41,9 @@ public class OpponentModel{
 	protected void addToOpponentBids(Bid bid){
 		numBids ++;
 		String bidString = bid.toString();
-		int bidInt = Integer.parseInt(bidString);
-		lastBid = bid;
-		opponentBids.put(bidInt, bid);
+		opponentBids.put(bidString, bid);
+		updateMean();
+		updateStandardDeviation();
 	}
 	
 	/**
@@ -52,9 +52,9 @@ public class OpponentModel{
 	 * @param bid
 	 * @param bidInt
 	 */
-	protected void addToOpponentUtilities(Bid bid, int bidInt){
+	protected void addToOpponentUtilities(Bid bid, String bidString){
 		double util = info.getUtilitySpace().getUtility(bid);
-		opponentUtilities.put(bidInt, util);
+		opponentUtilities.put(bidString, util);
 	}
 	
 	/**

@@ -7,6 +7,7 @@ import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.actions.Accept;
 import negotiator.actions.Action;
+import negotiator.actions.EndNegotiation;
 import negotiator.actions.Offer;
 import negotiator.parties.AbstractNegotiationParty;
 import negotiator.parties.NegotiationInfo;
@@ -21,9 +22,8 @@ import negotiator.parties.NegotiationInfo;
 public class Heugo extends AbstractNegotiationParty {
 	private static double alpha = .30769;
 	private Bid lastPartnerBid;
-	private static HashMap <Integer, Bid> heugoPastActions = new HashMap<>();
+	private static HashMap <String, Bid> heugoPastActions = new HashMap<>();
 	private OpponentModel opponent;
-	private int round = 0;
 	
 	/**
 	 * Initialization at the beginning of the negotiation round.
@@ -64,16 +64,71 @@ public class Heugo extends AbstractNegotiationParty {
 	 */
 	@Override
 	public Action chooseAction(List<Class<? extends Action>> validActions) {
-		// TODO
-		if ((validActions.size() == 2) && (!validActions.contains(Accept.class)))
-			//return offer
-		else{
-			//if second round
-			//else (all other rounds)
+		double lastPartnerBidUtility;
+		double time = timeline.getTime();
+		
+		
+		try{
+			if ((validActions.size() == 2) && (!validActions.contains(Accept.class))){ // First proposal
+				Bid firstBid = utilitySpace.getMaxUtilityBid();
+				return new Offer(getPartyId(), firstBid);
+			}
+			
+			else{ // TODO All other proposals
+				lastPartnerBidUtility = getUtility(lastPartnerBid);
+				
+				if(isAcceptable(lastPartnerBidUtility, time))
+					return new Accept(getPartyId(), lastPartnerBid);
+				
+				do{
+					
+					opponent.addToOpponentBids(lastPartnerBid);
+					Bid newBid = generateBid(time);
+					return new Offer(getPartyId(), newBid);
+				}
+				while (!isAcceptable(lastPartnerBidUtility, time));
+			}
 		}
-		return null;
+		catch (Exception e){
+			System.out.println("Error: " + e);
+			return new EndNegotiation(getPartyId());
+		}
 	}
 
+	/**
+	 * Generate a bid, based on the threshold and known information on
+	 * the opponent.
+	 * 
+	 * @param lastPartnerBidUtility
+	 * @return
+	 * @throws Exception 
+	 */
+	private Bid generateBid(double time) throws Exception{
+		double opponentMean = opponent.getMean();
+		double opponentSD = opponent.getStandardDeviation();
+		double threshold = getThreshold(time);
+		
+		Bid newBid = utilitySpace.getMaxUtilityBid();
+		double newBidUtility = getUtility(newBid);
+		
+		if((threshold >= (opponentMean - opponentSD)) && (threshold <= (opponentMean + opponentSD))){
+			while(((newBidUtility <= (opponentMean - opponentSD)) || (newBidUtility >= (opponentMean + opponentSD)))
+					&& (!heugoPastActions.containsValue(newBid))){
+				newBid = generateRandomBid();
+				newBidUtility = getUtility(newBid);
+			}
+		}
+		
+		updateHashMap(newBid);
+		return newBid;
+	}
+	
+	
+	private void updateHashMap(Bid bid){
+		String bidString = getBidString(bid);
+		heugoPastActions.put(bidString, bid);
+	}
+	
 	/**
 	 * Get the current threshold, based on the normalized time.
 	 * 
@@ -93,10 +148,9 @@ public class Heugo extends AbstractNegotiationParty {
 	 * 
 	 * @return integer representation of the bid.
 	 */
-	public int getIndexInt(Bid bid){
+	public String getBidString(Bid bid){
 		String bidString = bid.toString();
-		int bidInt = Integer.parseInt(bidString);
-		return bidInt;
+		return bidString;
 	}
 	
 	/**
