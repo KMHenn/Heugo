@@ -6,7 +6,7 @@ import negotiator.Bid;
 import negotiator.parties.NegotiationInfo;
 /**
  * 
- * Modeling the opponent based on previously gleened information.
+ * Modeling the opponent based on previously gleaned information.
  * 
  * @author Kaitlyn
  *

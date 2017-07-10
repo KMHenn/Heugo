@@ -12,6 +12,7 @@ import negotiator.parties.AbstractNegotiationParty;
 import negotiator.parties.NegotiationInfo;
 
 /**
+ * 
  * Main class for the agent.
  * 
  * @author Kaitlyn
