@@ -4,7 +4,13 @@ import java.util.HashMap;
 
 import negotiator.Bid;
 import negotiator.parties.NegotiationInfo;
-
+/**
+ * 
+ * Modeling the opponent based on previously gleened information.
+ * 
+ * @author Kaitlyn
+ *
+ */
 public class OpponentModel{
 	protected HashMap<Integer, Bid> opponentBids;
 	protected HashMap<Integer, Double> opponentUtilities;
@@ -14,6 +20,11 @@ public class OpponentModel{
 	protected Bid lastBid;
 	protected NegotiationInfo info;
 	
+	/**
+	 * Constructor that initializes variables unique to the specific opponent.
+	 * 
+	 * @param info
+	 */
 	public OpponentModel (NegotiationInfo info){
 		this.info = info;
 		opponentBids = new HashMap<>();
