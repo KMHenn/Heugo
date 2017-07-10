@@ -10,15 +10,16 @@ import negotiator.parties.NegotiationInfo;
  * 
  * @author Kaitlyn
  *
+ * @version 7.10.17
  */
 public class OpponentModel{
-	protected HashMap<String, Bid> opponentBids;
-	protected HashMap<String, Double> opponentUtilities;
-	protected int numBids;
-	protected double mean;
-	protected double standardDeviation;
-	protected Bid lastBid;
-	protected NegotiationInfo info;
+	protected HashMap<String, Bid> opponentBids; // HashMap of the bids made by the opponent.
+	protected HashMap<String, Double> opponentUtilities; // HashMap of the utilities of the bids made by the opponent.
+	protected int numBids; // Number of total bids made.
+	protected double mean; // Mean of the utilities.
+	protected double standardDeviation; // Standard deviation of the utilities.
+	protected Bid lastBid; // Last bid made by the opponent.
+	protected NegotiationInfo info; 
 	
 	/**
 	 * Constructor that initializes variables unique to the specific opponent.
@@ -40,7 +41,7 @@ public class OpponentModel{
 	 */
 	protected void addToOpponentBids(Bid bid){
 		numBids ++;
-		String bidString = bid.toString();
+		String bidString = bid.toString(); // Convert the bid to a String to use as a key.
 		opponentBids.put(bidString, bid);
 		System.out.println("Adding to Opponent Bids: " + bid);
 		addToOpponentUtilities(bid, bidString);
@@ -55,7 +56,7 @@ public class OpponentModel{
 	 * @param bidInt
 	 */
 	protected void addToOpponentUtilities(Bid bid, String bidString){
-		double util = info.getUtilitySpace().getUtility(bid);
+		double util = info.getUtilitySpace().getUtility(bid); // Get the utility of the bid.
 		opponentUtilities.put(bidString, util);
 		System.out.println("Adding to Opponent Utilities: " + util);
 	}
@@ -64,7 +65,7 @@ public class OpponentModel{
 	 * Update the mean to reflect the new data set.
 	 */
 	protected void updateMean(){
-		double sum = 0.0;
+		double sum = 0.0; // Hold the running total of the utilities.
 		
 		for (double utility : opponentUtilities.values())
 			sum += utility;
@@ -77,8 +78,8 @@ public class OpponentModel{
 	 * Update the standard deviation to reflect the new data set.
 	 */
 	protected void updateStandardDeviation(){
-		double sd = 0.0;
-		double squaredDifference = 0.0;
+		double sd = 0.0; // Temporary value for the standard deviation.
+		double squaredDifference = 0.0; // Hold the values of (utility - mean)^2
 		
 		for (double utility : opponentUtilities.values())
 			squaredDifference += Math.pow((utility - mean), 2);

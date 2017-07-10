@@ -18,10 +18,11 @@ import negotiator.parties.NegotiationInfo;
  * 
  * @author Kaitlyn
  *
+ * @version 7.10.17
  */
 public class Heugo extends AbstractNegotiationParty {
-	private static double alpha = .30769;
-	private Bid lastPartnerBid;
+	private static double alpha = 0.31; // Arbitrary value for threshold calculation.
+	private Bid lastPartnerBid; // Last partner bid.
 	private static HashMap <String, Bid> heugoPastActions = new HashMap<>();
 	private OpponentModel opponent;
 	
@@ -140,7 +141,8 @@ public class Heugo extends AbstractNegotiationParty {
 	 * @return threshold
 	 */
 	public double getThreshold(double time){
-		return (1.0 - Math.pow(time,  (1 / alpha)));
+		//TODO need smarter threshold equation.
+		return (1 - Math.pow(time,  (1 / alpha)));
 	}
 	
 	/**
