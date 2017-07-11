@@ -43,7 +43,9 @@ public class OpponentModel{
 		numBids ++;
 		String bidString = bid.toString(); // Convert the bid to a String to use as a key.
 		opponentBids.put(bidString, bid);
-		System.out.println("Adding to Opponent Bids: " + bid);
+		
+		System.out.println("Adding to Opponent Bids: " + bid); // Debug
+		
 		addToOpponentUtilities(bid, bidString);
 		updateMean();
 		updateStandardDeviation();
@@ -58,7 +60,8 @@ public class OpponentModel{
 	protected void addToOpponentUtilities(Bid bid, String bidString){
 		double util = info.getUtilitySpace().getUtility(bid); // Get the utility of the bid.
 		opponentUtilities.put(bidString, util);
-		System.out.println("Adding to Opponent Utilities: " + util);
+		
+		System.out.println("Adding to Opponent Utilities: " + util); // Debug
 	}
 	
 	/**
@@ -71,7 +74,8 @@ public class OpponentModel{
 			sum += utility;
 		
 		mean = sum / numBids;
-		System.out.println("\tNew Mean: " + mean);
+		
+		System.out.println("\tNew Mean: " + mean); // Debug
 	}
 	
 	/**
@@ -86,7 +90,8 @@ public class OpponentModel{
 		
 		sd = squaredDifference / (numBids - 1);
 		standardDeviation = Math.sqrt(sd);
-		System.out.println("\tNew SD: " + standardDeviation);
+		
+		System.out.println("\tNew SD: " + standardDeviation); // Debug
 	}
 	
 	/**

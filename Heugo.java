@@ -50,7 +50,9 @@ public class Heugo extends AbstractNegotiationParty {
 		
 		if (action instanceof Offer){
 			lastPartnerBid = ((Offer) action).getBid();
-			System.out.println("Adding to Opponent HashMap: " + lastPartnerBid);
+			
+			System.out.println("Adding to Opponent HashMap: " + lastPartnerBid); // Debug
+			
 			opponent.addToOpponentBids(lastPartnerBid);
 		}
 	}
@@ -110,7 +112,7 @@ public class Heugo extends AbstractNegotiationParty {
 		double opponentMean = opponent.getMean();
 		double opponentSD = opponent.getStandardDeviation();
 		
-		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD);
+		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD); // Debug
 		
 		double threshold = getThreshold(time);
 		
@@ -121,13 +123,23 @@ public class Heugo extends AbstractNegotiationParty {
 			&& (newBidUtility >= threshold)){
 				newBid = generateRandomBid();
 				newBidUtility = getUtility(newBid);
+				
+				if (heugoPastActions.containsValue(newBid))
+					newBid = utilitySpace.getMaxUtilityBid();
+					
 		}
-		System.out.println("New Bid Utility: " + getUtility(newBid));
+		
+		System.out.println("New Bid Utility: " + getUtility(newBid)); // Debug
+		
 		updateHashMap(newBid);
 		return newBid;
 	}
 	
-	
+	/**
+	 * Update the hash map, generating a String key based on the bid.
+	 * 
+	 * @param bid
+	 */
 	private void updateHashMap(Bid bid){
 		String bidString = getBidString(bid);
 		heugoPastActions.put(bidString, bid);
