@@ -155,7 +155,7 @@ public class Heugo extends AbstractNegotiationParty {
 	 */
 	public double getThreshold(double time) throws Exception{
 		double threshold = 1.0;
-		
+		/*
 		if ((time >=0) && (time <= 0.25)){
 			threshold = getUtility(utilitySpace.getMaxUtilityBid());
 		}
@@ -187,7 +187,7 @@ public class Heugo extends AbstractNegotiationParty {
 		else{
 			threshold = 0.50;
 		}
-		
+		*/
 		return threshold;
 	}
 	
