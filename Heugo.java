@@ -5,6 +5,7 @@ import java.util.List;
 
 import negotiator.AgentID;
 import negotiator.Bid;
+import negotiator.Domain;
 import negotiator.actions.Accept;
 import negotiator.actions.Action;
 import negotiator.actions.EndNegotiation;
@@ -25,6 +26,7 @@ public class Heugo extends AbstractNegotiationParty {
 	private Bid lastPartnerBid; // Last bid made by the opponent.
 	private static HashMap <String, Bid> heugoPastActions = new HashMap<>(); // Track the past actions made by Heugo to ensure no repeats.
 	private OpponentModel opponent;
+	public Domain domain;
 	
 	/**
 	 * Initialization at the beginning of the negotiation round.
@@ -36,6 +38,7 @@ public class Heugo extends AbstractNegotiationParty {
 		super.init(info);
 		lastPartnerBid = null;
 		opponent = new OpponentModel(info);
+		domain = utilitySpace.getDomain();
 	}
 	
 	/**
@@ -81,13 +84,12 @@ public class Heugo extends AbstractNegotiationParty {
 			
 			else{ //All other proposals
 				lastPartnerBidUtility = getUtility(lastPartnerBid);
-				
 				if(isAcceptable(lastPartnerBidUtility, time))
 					return new Accept(getPartyId(), lastPartnerBid);
 				
 				do{
 					opponent.addToOpponentBids(lastPartnerBid);
-					Bid newBid = generateBid(time);
+					Bid newBid = generateBid(time); // TODO problem
 					System.out.println("\tMaking Offer: " + newBid);
 					return new Offer(getPartyId(), newBid);
 				}
@@ -115,8 +117,9 @@ public class Heugo extends AbstractNegotiationParty {
 		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD); // Debug
 		
 		double threshold = getThreshold(time);
-		
-		Bid newBid = utilitySpace.getMaxUtilityBid();
+		Bid newBid = opponent.getProjectedOptimalBid(domain);
+		System.out.println("After getProjectedOptimalBid()");
+		/*Bid newBid = utilitySpace.getMaxUtilityBid();
 		double newBidUtility = getUtility(newBid);
 		
 		while((((newBidUtility <= (opponentMean - opponentSD)) || (newBidUtility >= (opponentMean + opponentSD)))) 
@@ -130,8 +133,8 @@ public class Heugo extends AbstractNegotiationParty {
 		}
 		
 		System.out.println("New Bid Utility: " + getUtility(newBid)); // Debug
-		
 		updateHashMap(newBid);
+		*/
 		return newBid;
 	}
 	
