@@ -42,7 +42,6 @@ public class OpponentModel{
 		utilityChanges = new ArrayList<>();
 		mean = 0.0;
 		standardDeviation = 0.0;
-		
 		lastBid = null;
 		twoBidsAgo = null;
 	}
@@ -59,54 +58,12 @@ public class OpponentModel{
 			twoBidsAgo = lastBid;
 	
 		lastBid = bid;
-		System.out.println("Updated last bid: " + lastBid); //Debug
 		String bidString = bid.toString(); // Convert the bid to a String to use as a key.
 		opponentBids.put(bidString, bid);
-		
-		System.out.println("Adding to Opponent Bids: " + bid + "\nIssue(s): " + bid.getIssues()); // Debug
 		
 		addToOpponentUtilities(bid, bidString);
 		updateMean();
 		updateStandardDeviation();
-		
-		if (twoBidsAgo != null){
-			addToAverageChange();
-		}
-	}
-	
-	/** 
-	 * Average change in utility of the opponent's bids.
-	 * Positive numbers mean the average utility increased, negative mean decrease.
-	 * 
-	 * @return
-	 */
-	protected double getAverageUtilityChange(){
-		int size = utilityChanges.size();
-		if (size < 2){
-			double total = 0;
-		
-			for (int i = 0; i < size; i ++)
-				total += utilityChanges.get(i);
-		
-			double change = total / size;
-		
-			System.out.println("Average Utility Change: " + change);
-		
-			return change;
-		}
-		
-		else{
-			return 0;
-		}
-	}
-	
-	protected void addToAverageChange(){
-		double lastBidUtil = info.getUtilitySpace().getUtility(lastBid);
-		double twoBidAgoUtil = info.getUtilitySpace().getUtility(twoBidsAgo);
-		
-		double change = lastBidUtil - twoBidAgoUtil;
-		
-		utilityChanges.add(change);
 	}
 	
 	/**
@@ -149,7 +106,7 @@ public class OpponentModel{
 		sd = squaredDifference / (numBids - 1);
 		standardDeviation = Math.sqrt(sd);
 		
-		System.out.println("\tNew SD: " + standardDeviation); // Debug
+		System.out.println("\tNew SD: " + standardDeviation);
 	}
 	
 	/**

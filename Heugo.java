@@ -22,7 +22,7 @@ import negotiator.parties.NegotiationInfo;
  * @version 7.18.17
  */
 public class Heugo extends AbstractNegotiationParty {
-	private final static double RESERVATION_UTILITY = 0.50;
+	private final static double RESERVATION_UTILITY = 0.65; // Arbitrary reservation value.
 	private Bid lastPartnerBid; // Last bid made by the opponent.
 	private static HashMap <String, Bid> heugoPastActions = new HashMap<>(); // Track the past actions made by Heugo to ensure no repeats.
 	private OpponentModel opponent;
@@ -77,6 +77,7 @@ public class Heugo extends AbstractNegotiationParty {
 		try{
 			if ((validActions.size() == 2) && (!validActions.contains(Accept.class))){ // First proposal
 				Bid firstBid = utilitySpace.getMaxUtilityBid();
+				updateHashMap(firstBid);
 				return new Offer(getPartyId(), firstBid);
 			}
 			
@@ -88,7 +89,6 @@ public class Heugo extends AbstractNegotiationParty {
 				do{
 					opponent.addToOpponentBids(lastPartnerBid);
 					Bid newBid = generateBid(time);
-					System.out.println("\tMaking Offer: " + newBid); //TODO problem, bid value is null
 					return new Offer(getPartyId(), newBid);
 				}
 				while (!isAcceptable(lastPartnerBidUtility, time));
@@ -96,6 +96,7 @@ public class Heugo extends AbstractNegotiationParty {
 		}
 		catch (Exception e){
 			System.out.println("Error: " + e);
+			e.printStackTrace();
 			return new EndNegotiation(getPartyId());
 		}
 	}
@@ -109,44 +110,33 @@ public class Heugo extends AbstractNegotiationParty {
 	 * @throws Exception 
 	 */
 	private Bid generateBid(double time) throws Exception{
+		Bid newBid;
+		double newBidUtility;
 		double opponentMean = opponent.getMean();
 		double opponentSD = opponent.getStandardDeviation();
-		double lastHeugoUtil;
-		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD);
-		Bid newBid;
+		double minUtil = 1 - (opponentMean + opponentSD);
+		double maxUtil = 1 - (opponentMean - opponentSD);
 		
-		if (heugoPastActions.size() == 0){
-			newBid = utilitySpace.getMaxUtilityBid();
-			lastHeugoUtil = getUtility(newBid);
-		}
-		else{
-			newBid = heugoPastActions.get(heugoPastActions.size() - 1);
-			lastHeugoUtil = getUtility(heugoPastActions.get(heugoPastActions.size() - 1));
-		}
+		newBid = utilitySpace.getMaxUtilityBid();
+		newBidUtility = getUtility(newBid);
 		
-		double newBidUtility = getUtility(newBid);
-		double averageOpponentChange = opponent.getAverageUtilityChange();
+		System.out.println("Max Bid Util: " + newBidUtility);
 		
-		System.out.println("Target Bid Utility: " + (lastHeugoUtil + averageOpponentChange));
+		System.out.println("minUtil: " + minUtil);
+		System.out.println("maxUtil: " + maxUtil);
 		
-		if ((lastHeugoUtil + averageOpponentChange) <= RESERVATION_UTILITY){
-			while(newBidUtility < RESERVATION_UTILITY){
-				newBid = generateRandomBid();
-				newBidUtility = getUtility(newBid);
-			}
+		while ((newBidUtility < minUtil) || (newBidUtility >= maxUtil)){
+			newBid = generateRandomBid();
+			newBidUtility = getUtility(newBid);
 		}
 		
-		else{
-			while ((newBidUtility != (lastHeugoUtil + averageOpponentChange)) && (newBidUtility > (opponentMean + opponentSD))){
-				newBid = generateRandomBid();
-				newBidUtility = getUtility(newBid);
-			}
-		}
+		System.out.println("Bidding utility: " + newBidUtility);
 		
-		System.out.println("New Bid Utility: " + getUtility(newBid));
 		updateHashMap(newBid);
-
 		return newBid;
+		
+		
+
 	}
 	
 	/**
