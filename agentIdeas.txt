@@ -1,0 +1,3 @@
+- drop opponent modelling for now, try implementing tit-for-tat instead
+	probably averaged? that or relative
+- change acceptance to take when opponent's bid is better than some value

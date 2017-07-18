@@ -89,8 +89,8 @@ public class Heugo extends AbstractNegotiationParty {
 				
 				do{
 					opponent.addToOpponentBids(lastPartnerBid);
-					Bid newBid = generateBid(time); // TODO problem
-					System.out.println("\tMaking Offer: " + newBid);
+					Bid newBid = generateBid(time);
+					System.out.println("\tMaking Offer: " + newBid); //TODO problem, bid value is null
 					return new Offer(getPartyId(), newBid);
 				}
 				while (!isAcceptable(lastPartnerBidUtility, time));
