@@ -19,10 +19,10 @@ import negotiator.parties.NegotiationInfo;
  * 
  * @author Kaitlyn
  *
- * @version 7.11.17
+ * @version 7.18.17
  */
 public class Heugo extends AbstractNegotiationParty {
-	private static double alpha = 0.31; // Arbitrary value for threshold calculation.
+	private final static double RESERVATION_UTILITY = 0.50;
 	private Bid lastPartnerBid; // Last bid made by the opponent.
 	private static HashMap <String, Bid> heugoPastActions = new HashMap<>(); // Track the past actions made by Heugo to ensure no repeats.
 	private OpponentModel opponent;
@@ -53,8 +53,6 @@ public class Heugo extends AbstractNegotiationParty {
 		
 		if (action instanceof Offer){
 			lastPartnerBid = ((Offer) action).getBid();
-			
-			System.out.println("Adding to Opponent HashMap: " + lastPartnerBid); // Debug
 			
 			opponent.addToOpponentBids(lastPartnerBid);
 		}
@@ -113,28 +111,41 @@ public class Heugo extends AbstractNegotiationParty {
 	private Bid generateBid(double time) throws Exception{
 		double opponentMean = opponent.getMean();
 		double opponentSD = opponent.getStandardDeviation();
+		double lastHeugoUtil;
+		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD);
+		Bid newBid;
 		
-		System.out.println("Opponent Mean: " + opponentMean + "\nOpponent Standard Deviation: " + opponentSD); // Debug
-		
-		double threshold = getThreshold(time);
-		Bid newBid = opponent.getProjectedOptimalBid(domain);
-		System.out.println("After getProjectedOptimalBid()");
-		/*Bid newBid = utilitySpace.getMaxUtilityBid();
-		double newBidUtility = getUtility(newBid);
-		
-		while((((newBidUtility <= (opponentMean - opponentSD)) || (newBidUtility >= (opponentMean + opponentSD)))) 
-			&& (newBidUtility >= threshold)){
-				newBid = generateRandomBid();
-				newBidUtility = getUtility(newBid);
-				
-				if (heugoPastActions.containsValue(newBid))
-					newBid = utilitySpace.getMaxUtilityBid();
-					
+		if (heugoPastActions.size() == 0){
+			newBid = utilitySpace.getMaxUtilityBid();
+			lastHeugoUtil = getUtility(newBid);
+		}
+		else{
+			newBid = heugoPastActions.get(heugoPastActions.size() - 1);
+			lastHeugoUtil = getUtility(heugoPastActions.get(heugoPastActions.size() - 1));
 		}
 		
-		System.out.println("New Bid Utility: " + getUtility(newBid)); // Debug
+		double newBidUtility = getUtility(newBid);
+		double averageOpponentChange = opponent.getAverageUtilityChange();
+		
+		System.out.println("Target Bid Utility: " + (lastHeugoUtil + averageOpponentChange));
+		
+		if ((lastHeugoUtil + averageOpponentChange) <= RESERVATION_UTILITY){
+			while(newBidUtility < RESERVATION_UTILITY){
+				newBid = generateRandomBid();
+				newBidUtility = getUtility(newBid);
+			}
+		}
+		
+		else{
+			while ((newBidUtility != (lastHeugoUtil + averageOpponentChange)) && (newBidUtility > (opponentMean + opponentSD))){
+				newBid = generateRandomBid();
+				newBidUtility = getUtility(newBid);
+			}
+		}
+		
+		System.out.println("New Bid Utility: " + getUtility(newBid));
 		updateHashMap(newBid);
-		*/
+
 		return newBid;
 	}
 	
@@ -158,39 +169,27 @@ public class Heugo extends AbstractNegotiationParty {
 	 */
 	public double getThreshold(double time) throws Exception{
 		double threshold = 1.0;
-		/*
+		
 		if ((time >=0) && (time <= 0.25)){
-			threshold = getUtility(utilitySpace.getMaxUtilityBid());
+			threshold = 1.0 - (time / 10);
 		}
 		
 		else if ((time > 0.25) && (time <= 0.5)){
-			double maxUtility = getUtility(utilitySpace.getMaxUtilityBid());
-			threshold = maxUtility - (time / 2);
-			threshold = Math.max(threshold, 0.8);
+			threshold = 1.0 - (time / 5);
 		}
 		
 		else if ((time > 0.5) && (time <= 0.75)){
-			double alphaBased = 1 - Math.pow(time, (1 / alpha));
-			double oppMean = opponent.getMean();
-			double oppBased = 1 - Math.pow(time, (1 / oppMean));
-			threshold = Math.max(alphaBased, oppBased);
-			threshold = Math.max(threshold, 0.75);
+			threshold = 0.9 - Math.pow(time, (1 / 0.1));
 		}
 		
 		else if ((time > 0.75) && (time <= 0.90)){
-			alpha = 0.45;
-			threshold = 1.15 - Math.pow(time, (2 / alpha));
-			threshold = Math.max(threshold, 0.7);
-		}
-		
-		else if ((time > 0.90) && (time <= 0.99)){
-			threshold = 1.1 - Math.pow(time, (1.2 / alpha));
+			threshold = 1.66 - Math.pow(time, (1 / 1.5));
 		}
 		
 		else{
-			threshold = 0.50;
+			threshold = RESERVATION_UTILITY;
 		}
-		*/
+	
 		return threshold;
 	}
 	

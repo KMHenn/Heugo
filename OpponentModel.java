@@ -1,5 +1,6 @@
 package heugo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -15,16 +16,17 @@ import negotiator.parties.NegotiationInfo;
  * 
  * @author Kaitlyn
  *
- * @version 7.10.17
+ * @version 7.18.17
  */
 public class OpponentModel{
 	protected HashMap<String, Bid> opponentBids; // HashMap of the bids made by the opponent.
 	protected HashMap<String, Double> opponentUtilities; // HashMap of the utilities of the bids made by the opponent.
-	protected HashMap<Issue, HashMap<Integer, HashMap<Value, Integer>>> frequencyTracker = null;
+	protected ArrayList<Double> utilityChanges;
 	protected int numBids; // Number of total bids made.
 	protected double mean; // Mean of the utilities.
 	protected double standardDeviation; // Standard deviation of the utilities.
 	protected Bid lastBid; // Last bid made by the opponent.
+	protected Bid twoBidsAgo; // Bid made two rounds ago.
 	protected int numberOfIssues; // Number of issues in the bid pool.
 	protected NegotiationInfo info; 
 	
@@ -37,8 +39,12 @@ public class OpponentModel{
 		this.info = info;
 		opponentBids = new HashMap<>();
 		opponentUtilities = new HashMap<>();
+		utilityChanges = new ArrayList<>();
 		mean = 0.0;
 		standardDeviation = 0.0;
+		
+		lastBid = null;
+		twoBidsAgo = null;
 	}
 	
 	/**
@@ -48,6 +54,10 @@ public class OpponentModel{
 	 */
 	protected void addToOpponentBids(Bid bid){
 		numBids ++;
+	
+		if (lastBid != null)
+			twoBidsAgo = lastBid;
+	
 		lastBid = bid;
 		System.out.println("Updated last bid: " + lastBid); //Debug
 		String bidString = bid.toString(); // Convert the bid to a String to use as a key.
@@ -56,9 +66,47 @@ public class OpponentModel{
 		System.out.println("Adding to Opponent Bids: " + bid + "\nIssue(s): " + bid.getIssues()); // Debug
 		
 		addToOpponentUtilities(bid, bidString);
-		bidTrack(bid);
 		updateMean();
 		updateStandardDeviation();
+		
+		if (twoBidsAgo != null){
+			addToAverageChange();
+		}
+	}
+	
+	/** 
+	 * Average change in utility of the opponent's bids.
+	 * Positive numbers mean the average utility increased, negative mean decrease.
+	 * 
+	 * @return
+	 */
+	protected double getAverageUtilityChange(){
+		int size = utilityChanges.size();
+		if (size < 2){
+			double total = 0;
+		
+			for (int i = 0; i < size; i ++)
+				total += utilityChanges.get(i);
+		
+			double change = total / size;
+		
+			System.out.println("Average Utility Change: " + change);
+		
+			return change;
+		}
+		
+		else{
+			return 0;
+		}
+	}
+	
+	protected void addToAverageChange(){
+		double lastBidUtil = info.getUtilitySpace().getUtility(lastBid);
+		double twoBidAgoUtil = info.getUtilitySpace().getUtility(twoBidsAgo);
+		
+		double change = lastBidUtil - twoBidAgoUtil;
+		
+		utilityChanges.add(change);
 	}
 	
 	/**
@@ -102,89 +150,6 @@ public class OpponentModel{
 		standardDeviation = Math.sqrt(sd);
 		
 		System.out.println("\tNew SD: " + standardDeviation); // Debug
-	}
-	
-	protected void bidTrack(Bid bid){
-		HashMap <Integer, Value> currentBid = bid.getValues();
-		List<Issue> issueList = bid.getIssues();
-		int counter = 0;
-		if (frequencyTracker == null){
-			numberOfIssues = issueList.size();
-			System.out.println("Number of Issues: " + numberOfIssues);
-			while (counter < numberOfIssues){
-				for (HashMap.Entry<Integer, Value> entry : currentBid.entrySet()){
-					frequencyTracker = new HashMap<>();
-					HashMap <Value, Integer> innermostMap = new HashMap<>();
-					innermostMap.put(entry.getValue(), 1);
-					System.out.println("issueList.get(counter): " + issueList.get(counter));
-					HashMap<Integer, HashMap<Value, Integer>> innerMap = new HashMap<>();
-					innerMap.put(entry.getKey(), innermostMap);
-					frequencyTracker.put(issueList.get(counter), innerMap);
-					System.out.println("Added to tracker");
-					System.out.println("Issue: " + issueList.get(counter)); // For debug
-					counter ++;
-				}
-			}
-		}
-		else{
-			for (HashMap.Entry<Integer, Value> entry : currentBid.entrySet()){
-				HashMap <Integer, HashMap<Value, Integer>> innerFrequencyTracker = frequencyTracker.get(issueList.get(counter));
-				for(Integer key : innerFrequencyTracker.keySet()){
-					HashMap <Value, Integer> innermostFrequencyTracker = innerFrequencyTracker.get(key);
-					//TODO Check
-					if (innermostFrequencyTracker.containsValue(entry.getValue())){
-						innermostFrequencyTracker.put(entry.getValue(), (innermostFrequencyTracker.get(entry.getValue()) + 1));
-						innerFrequencyTracker.put(key, innermostFrequencyTracker);
-						frequencyTracker.put(issueList.get(counter), innerFrequencyTracker);
-					}
-					else{
-						HashMap<Integer, HashMap<Value, Integer>> innerMap = new HashMap<>();
-						HashMap<Value, Integer> innermostMap = new HashMap<>();
-						innermostMap.put(entry.getValue(), 1);
-						innerMap.put(key,  innermostMap);
-						frequencyTracker.put(issueList.get(counter), innerMap);
-					}
-				}
-				counter ++;
-			}
-		
-		}
-	}
-	
-	public Bid getProjectedOptimalBid(Domain domain){ // TODO currently returns a null bid Maybe track things in an arraylist of arrays? with different list for each issue?
-		HashMap<Integer, Value> bestBidMap = new HashMap<>();
-		Bid newBid = lastBid;
-		System.out.println("Best bid (initial): " + lastBid);
-		
-		for (HashMap.Entry<Issue, HashMap<Integer, HashMap<Value, Integer>>> activeIssue : frequencyTracker.entrySet()){
-			HashMap <Integer, HashMap<Value, Integer>> allValues = activeIssue.getValue();
-			int bestHashInt = 0;
-			HashMap<Value, Integer> bestValueMap = null;
-			Value bestValue = null;
-			
-			for(HashMap.Entry<Integer, HashMap<Value, Integer>> activeValues : allValues.entrySet()){
-				HashMap<Value, Integer> values = activeValues.getValue();
-				if ((bestHashInt == 0) && (bestValueMap == null)){
-					bestHashInt = activeValues.getKey();
-					bestValueMap = new HashMap<>();
-					bestValueMap = activeValues.getValue();
-				}
-				else{
-					for (Value value : values.keySet()){
-						if (bestValue == null)
-							bestValue = value;
-						else{
-							if (values.get(value) > values.get(bestValue))
-								bestValue = value;
-						}
-					}
-				}
-				bestBidMap.put(bestHashInt, bestValue);
-			}
-			
-		}
-		newBid = new Bid(domain, bestBidMap);
-		return newBid;
 	}
 	
 	/**
