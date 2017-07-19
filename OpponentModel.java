@@ -16,7 +16,7 @@ import negotiator.parties.NegotiationInfo;
  * 
  * @author Kaitlyn
  *
- * @version 7.18.17
+ * @version 7.19.17
  */
 public class OpponentModel{
 	protected HashMap<String, Bid> opponentBids; // HashMap of the bids made by the opponent.

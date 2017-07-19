@@ -2,6 +2,7 @@ package heugo;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
 
 import negotiator.AgentID;
 import negotiator.Bid;
@@ -19,10 +20,10 @@ import negotiator.parties.NegotiationInfo;
  * 
  * @author Kaitlyn
  *
- * @version 7.18.17
+ * @version 7.19.17
  */
 public class Heugo extends AbstractNegotiationParty {
-	private final static double RESERVATION_UTILITY = 0.65; // Arbitrary reservation value.
+	private final static double RESERVATION_UTILITY = 0.5; // Arbitrary reservation value.
 	private Bid lastPartnerBid; // Last bid made by the opponent.
 	private static HashMap <String, Bid> heugoPastActions = new HashMap<>(); // Track the past actions made by Heugo to ensure no repeats.
 	private OpponentModel opponent;
@@ -82,6 +83,7 @@ public class Heugo extends AbstractNegotiationParty {
 			}
 			
 			else{ //All other proposals
+				//TODO implement timer to default if bid gen takes too long
 				lastPartnerBidUtility = getUtility(lastPartnerBid);
 				if(isAcceptable(lastPartnerBidUtility, time))
 					return new Accept(getPartyId(), lastPartnerBid);
@@ -110,6 +112,9 @@ public class Heugo extends AbstractNegotiationParty {
 	 * @throws Exception 
 	 */
 	private Bid generateBid(double time) throws Exception{
+		double startTime = System.currentTimeMillis();
+		double currentTime;
+		double timeElapsed;
 		Bid newBid;
 		double newBidUtility;
 		double opponentMean = opponent.getMean();
@@ -128,6 +133,10 @@ public class Heugo extends AbstractNegotiationParty {
 		while ((newBidUtility < minUtil) || (newBidUtility >= maxUtil)){
 			newBid = generateRandomBid();
 			newBidUtility = getUtility(newBid);
+			currentTime = System.currentTimeMillis();
+			timeElapsed = currentTime - startTime;
+			opponentSD += 0.03;
+			minUtil = 1 - (opponentMean + opponentSD);
 		}
 		
 		System.out.println("Bidding utility: " + newBidUtility);
